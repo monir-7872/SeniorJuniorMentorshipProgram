@@ -1,10 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
-import { AuthProvider } from '@/context/AuthContext';
+import React, { useEffect, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { MentorshipProvider } from '@/context/MentorshipContext';
 import { ToastProvider } from '@/context/ToastContext';
 import { WebRTCProvider } from '@/context/WebRTCContext';
+import { ThemeProvider } from '@/context/ThemeContext';
+import { LayoutProvider, useLayout } from '@/context/LayoutContext';
 import Sidebar from './Sidebar';
 import CallRoomModal from '../webrtc/CallRoomModal';
 import IncomingCallAlert from '../webrtc/IncomingCallAlert';
@@ -13,59 +16,105 @@ import BookSessionModal from '../calendar/BookSessionModal';
 import CreateGoalModal from '../goals/CreateGoalModal';
 import UploadResourceModal from '../resources/UploadResourceModal';
 
-export default function AppShell({ children }: { children: React.ReactNode }) {
-  const [quickActionOpen, setQuickActionOpen] = useState(false);
-  const [bookSessionOpen, setBookSessionOpen] = useState(false);
-  const [createGoalOpen, setCreateGoalOpen] = useState(false);
-  const [uploadResourceOpen, setUploadResourceOpen] = useState(false);
+function AppContent({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { isLoggedIn, isLoadingAuth } = useAuth();
+  const {
+    quickActionOpen,
+    setQuickActionOpen,
+    bookSessionOpen,
+    setBookSessionOpen,
+    createGoalOpen,
+    setCreateGoalOpen,
+    uploadResourceOpen,
+    setUploadResourceOpen,
+  } = useLayout();
+
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  // Protect all dashboard routes if not logged in
+  useEffect(() => {
+    if (hasMounted && !isLoadingAuth && !isLoggedIn && pathname !== '/login') {
+      router.push('/login');
+    }
+  }, [hasMounted, isLoadingAuth, isLoggedIn, pathname, router]);
+
+  // If on /login page, display without the dashboard sidebar
+  if (pathname === '/login') {
+    return <>{children}</>;
+  }
+
+  // Prevent flicker before auth initializes
+  if (!hasMounted || isLoadingAuth) {
+    return (
+      <div className="min-h-screen bg-[#EEF2F6] dark:bg-[#0B1120] flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
-    <ToastProvider>
-      <AuthProvider>
-        <MentorshipProvider>
-          <WebRTCProvider>
-            <div className="flex min-h-screen bg-slate-50 text-slate-900 font-sans">
-              
-              {/* Figma Dark Navy Left Sidebar */}
-              <Sidebar />
+    <div className="flex min-h-screen bg-[#EEF2F6] dark:bg-[#0B1120] text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200">
+      
+      {/* Responsive Left Sidebar & Drawer */}
+      <Sidebar />
 
-              {/* Main Content Area */}
-              <main className="flex-1 flex flex-col min-w-0 min-h-screen overflow-x-hidden">
-                {children}
-              </main>
+      {/* Main Content Workspace */}
+      <main className="flex-1 flex flex-col min-w-0 min-h-screen overflow-x-hidden">
+        {children}
+      </main>
 
-              {/* WebRTC Video/Audio Modals */}
-              <CallRoomModal />
-              <IncomingCallAlert />
+      {/* WebRTC Video/Audio Modals */}
+      <CallRoomModal />
+      <IncomingCallAlert />
 
-              {/* Modals */}
-              <QuickActionModal
-                isOpen={quickActionOpen}
-                onClose={() => setQuickActionOpen(false)}
-                onBookSession={() => setBookSessionOpen(true)}
-                onCreateGoal={() => setCreateGoalOpen(true)}
-                onUploadResource={() => setUploadResourceOpen(true)}
-              />
+      {/* Interactive Global Modals */}
+      <QuickActionModal
+        isOpen={quickActionOpen}
+        onClose={() => setQuickActionOpen(false)}
+        onBookSession={() => setBookSessionOpen(true)}
+        onCreateGoal={() => setCreateGoalOpen(true)}
+        onUploadResource={() => setUploadResourceOpen(true)}
+      />
 
-              <BookSessionModal
-                isOpen={bookSessionOpen}
-                onClose={() => setBookSessionOpen(false)}
-              />
+      <BookSessionModal
+        isOpen={bookSessionOpen}
+        onClose={() => setBookSessionOpen(false)}
+      />
 
-              <CreateGoalModal
-                isOpen={createGoalOpen}
-                onClose={() => setCreateGoalOpen(false)}
-              />
+      <CreateGoalModal
+        isOpen={createGoalOpen}
+        onClose={() => setCreateGoalOpen(false)}
+      />
 
-              <UploadResourceModal
-                isOpen={uploadResourceOpen}
-                onClose={() => setUploadResourceOpen(false)}
-              />
+      <UploadResourceModal
+        isOpen={uploadResourceOpen}
+        onClose={() => setUploadResourceOpen(false)}
+      />
 
-            </div>
-          </WebRTCProvider>
-        </MentorshipProvider>
-      </AuthProvider>
-    </ToastProvider>
+    </div>
+  );
+}
+
+export default function AppShell({ children }: { children: React.ReactNode }) {
+  return (
+    <ThemeProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <MentorshipProvider>
+            <WebRTCProvider>
+              <LayoutProvider>
+                <AppContent>{children}</AppContent>
+              </LayoutProvider>
+            </WebRTCProvider>
+          </MentorshipProvider>
+        </AuthProvider>
+      </ToastProvider>
+    </ThemeProvider>
   );
 }

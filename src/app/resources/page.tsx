@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react';
 import TopHeader from '@/components/layout/TopHeader';
 import UploadResourceModal from '@/components/resources/UploadResourceModal';
 import { useMentorship } from '@/context/MentorshipContext';
+import { useLayout } from '@/context/LayoutContext';
 import { ResourceCategory, SharedResource } from '@/types';
 import { downloadFile } from '@/lib/utils';
 import {
@@ -13,11 +14,6 @@ import {
   Download,
   Bookmark,
   Heart,
-  FileText,
-  Tag,
-  Sparkles,
-  FileCode,
-  Archive,
 } from 'lucide-react';
 
 const CATEGORIES: ('All' | ResourceCategory | 'Bookmarked')[] = [
@@ -32,6 +28,7 @@ const CATEGORIES: ('All' | ResourceCategory | 'Bookmarked')[] = [
 
 export default function ResourcesPage() {
   const { resources, toggleBookmarkResource, likeResource } = useMentorship();
+  const { setQuickActionOpen } = useLayout();
 
   const [activeCategory, setActiveCategory] = useState<'All' | ResourceCategory | 'Bookmarked'>('All');
   const [search, setSearch] = useState('');
@@ -72,10 +69,10 @@ export default function ResourcesPage() {
       <TopHeader
         title="Resources Library"
         subtitle="Download student study notes, FAANG resume templates, and curated interview roadmaps"
-        onOpenQuickAction={() => setUploadModalOpen(true)}
+        onOpenQuickAction={() => setQuickActionOpen(true)}
       />
 
-      <div className="p-8 max-w-7xl w-full mx-auto space-y-6">
+      <div className="p-4 sm:p-8 max-w-7xl w-full mx-auto space-y-6">
         
         {/* Controls: Search & Upload */}
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
@@ -86,13 +83,13 @@ export default function ResourcesPage() {
               placeholder="Search notes, roadmaps, interview cheatsheets, authors..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-white text-xs font-medium text-slate-900 rounded-2xl border border-slate-200/80 focus:border-indigo-500 focus:outline-none shadow-xs transition-all"
+              className="w-full pl-10 pr-4 py-3 bg-white dark:bg-[#151F32] text-sm font-medium text-slate-900 dark:text-white placeholder-slate-400 rounded-2xl border border-slate-200/90 dark:border-[#26334D] focus:border-indigo-500 focus:outline-none shadow-xs transition-all"
             />
           </div>
 
           <button
             onClick={() => setUploadModalOpen(true)}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-600/20 hover:scale-102 active:scale-98 transition-all shrink-0 self-start md:self-auto"
+            className="flex items-center gap-2 px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-indigo-600/25 hover:scale-102 active:scale-98 transition-all shrink-0 self-start md:self-auto cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Upload Resource</span>
@@ -100,15 +97,15 @@ export default function ResourcesPage() {
         </div>
 
         {/* Categories Tabs */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
           {CATEGORIES.map((cat) => (
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
+              className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 cursor-pointer ${
                 activeCategory === cat
                   ? 'bg-indigo-600 text-white shadow-xs'
-                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/70'
+                  : 'bg-white dark:bg-[#151F32] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/90 dark:border-[#26334D]'
               }`}
             >
               {cat === 'Bookmarked' ? '★ Bookmarked' : cat}
@@ -118,21 +115,21 @@ export default function ResourcesPage() {
 
         {/* Resources Grid */}
         {filteredResources.length === 0 ? (
-          <div className="bg-white border border-slate-200/80 rounded-3xl p-12 text-center">
-            <BookOpen className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-            <h4 className="text-base font-bold text-slate-800">No resources found</h4>
-            <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+          <div className="bg-white dark:bg-[#151F32] border border-slate-200/90 dark:border-[#26334D] rounded-3xl p-12 text-center">
+            <BookOpen className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+            <h4 className="text-lg font-bold text-slate-800 dark:text-white">No resources found</h4>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
               Be the first to share notes or roadmaps with university peers!
             </p>
             <button
               onClick={() => setUploadModalOpen(true)}
-              className="mt-4 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold"
+              className="mt-4 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-bold cursor-pointer"
             >
               Share a Resource
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {filteredResources.map((res) => {
               const isPdf = res.fileType === 'PDF';
               const isZip = res.fileType === 'ZIP';
@@ -140,26 +137,26 @@ export default function ResourcesPage() {
               return (
                 <div
                   key={res.id}
-                  className="bg-white border border-slate-200/80 hover:border-indigo-300 rounded-2xl p-6 shadow-xs hover:shadow-md transition-all flex flex-col justify-between group"
+                  className="interactive-card bg-white dark:bg-[#151F32] border border-slate-200/90 dark:border-[#26334D] rounded-3xl p-6 md:p-8 shadow-sm hover:border-indigo-500/70 flex flex-col justify-between group"
                 >
                   <div>
                     {/* Header */}
                     <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-11 h-11 rounded-2xl flex items-center justify-center font-bold text-xs shrink-0 ${
+                      <div className="flex items-center gap-3.5">
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-xs shrink-0 shadow-xs ${
                           isPdf
-                            ? 'bg-rose-50 text-rose-600 border border-rose-200'
+                            ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900'
                             : isZip
-                            ? 'bg-amber-50 text-amber-600 border border-amber-200'
-                            : 'bg-indigo-50 text-indigo-600 border border-indigo-200'
+                            ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-900'
+                            : 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-900'
                         }`}>
                           {res.fileType}
                         </div>
                         <div>
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">
+                          <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2.5 py-0.5 rounded-md border border-indigo-100 dark:border-indigo-900">
                             {res.category}
                           </span>
-                          <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors mt-1">
+                          <h4 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors mt-1">
                             {res.title}
                           </h4>
                         </div>
@@ -168,10 +165,10 @@ export default function ResourcesPage() {
                       {/* Bookmark Button */}
                       <button
                         onClick={() => toggleBookmarkResource(res.id)}
-                        className={`p-2 rounded-xl border transition-colors ${
+                        className={`p-2.5 rounded-xl border transition-colors cursor-pointer ${
                           res.isBookmarked
-                            ? 'bg-amber-50 border-amber-200 text-amber-600'
-                            : 'bg-white border-slate-200 text-slate-400 hover:text-slate-600 hover:bg-slate-50'
+                            ? 'bg-amber-50 dark:bg-amber-950/70 border-amber-300 dark:border-amber-800 text-amber-600'
+                            : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
                         }`}
                         title={res.isBookmarked ? 'Remove bookmark' : 'Bookmark this resource'}
                       >
@@ -179,16 +176,16 @@ export default function ResourcesPage() {
                       </button>
                     </div>
 
-                    <p className="text-xs text-slate-600 mt-3 leading-relaxed">
+                    <p className="text-sm text-slate-600 dark:text-slate-300 mt-3.5 leading-relaxed">
                       {res.description}
                     </p>
 
                     {/* Tags */}
-                    <div className="flex flex-wrap gap-1.5 mt-3.5">
+                    <div className="flex flex-wrap gap-1.5 mt-4">
                       {res.tags.map((tag) => (
                         <span
                           key={tag}
-                          className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-slate-100 text-slate-700"
+                          className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700"
                         >
                           #{tag}
                         </span>
@@ -197,35 +194,35 @@ export default function ResourcesPage() {
                   </div>
 
                   {/* Footer & Download Action */}
-                  <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
+                  <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between flex-wrap gap-3">
+                    <div className="flex items-center gap-2.5">
                       <img
                         src={res.authorAvatar}
                         alt={res.authorName}
-                        className="w-7 h-7 rounded-full object-cover ring-1 ring-slate-200"
+                        className="w-8 h-8 rounded-full object-cover ring-1 ring-slate-200 dark:ring-slate-700"
                       />
                       <div>
-                        <p className="text-xs font-bold text-slate-800 leading-tight">{res.authorName}</p>
-                        <span className="text-[10px] text-slate-400">{res.authorRole}</span>
+                        <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 leading-tight">{res.authorName}</p>
+                        <span className="text-xs text-slate-400">{res.authorRole}</span>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2.5">
                       {/* Like button */}
                       <button
                         onClick={() => likeResource(res.id)}
-                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-slate-200 text-slate-600 hover:text-rose-600 hover:border-rose-200 text-xs font-semibold transition-colors"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-rose-600 hover:border-rose-300 text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
                       >
-                        <Heart className="w-3.5 h-3.5" />
+                        <Heart className="w-4 h-4 text-rose-500" />
                         <span>{res.likesCount}</span>
                       </button>
 
                       {/* Download Button */}
                       <button
                         onClick={() => handleDownload(res)}
-                        className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-xs hover:scale-102 active:scale-98 transition-all"
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-indigo-600/25 hover:scale-102 active:scale-98 transition-all cursor-pointer"
                       >
-                        <Download className="w-3.5 h-3.5" />
+                        <Download className="w-4 h-4" />
                         <span>Download ({res.fileSize})</span>
                       </button>
                     </div>

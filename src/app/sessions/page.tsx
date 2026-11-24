@@ -7,8 +7,10 @@ import RescheduleModal from '@/components/calendar/RescheduleModal';
 import { useAuth } from '@/context/AuthContext';
 import { useMentorship } from '@/context/MentorshipContext';
 import { useWebRTC } from '@/context/WebRTCContext';
+import { useLayout } from '@/context/LayoutContext';
+import { useToast } from '@/context/ToastContext';
 import { MentorshipSession } from '@/types';
-import { INITIAL_USERS } from '@/lib/mockData';
+import { DEMO_USERS_LIST } from '@/lib/demoUsers';
 import {
   Calendar as CalendarIcon,
   Clock,
@@ -17,16 +19,18 @@ import {
   ChevronLeft,
   ChevronRight,
   User,
-  AlertTriangle,
   RotateCcw,
-  CheckCircle2,
   CalendarDays,
+  CheckCircle2,
+  XCircle,
 } from 'lucide-react';
 
 export default function SessionsPage() {
   const { currentUser } = useAuth();
-  const { sessions, cancelSession } = useMentorship();
+  const { sessions, cancelSession, acceptSession, declineSession } = useMentorship();
   const { initiateCall } = useWebRTC();
+  const { setQuickActionOpen } = useLayout();
+  const { showToast } = useToast();
 
   const [activeTab, setActiveTab] = useState<'Upcoming' | 'Past' | 'Cancelled'>('Upcoming');
   const [bookModalOpen, setBookModalOpen] = useState(false);
@@ -35,13 +39,22 @@ export default function SessionsPage() {
   // Month navigation state
   const [currentDate, setCurrentDate] = useState(new Date(2026, 10, 24)); // Nov 2026
 
-  const userSessions = sessions.filter(
-    (s) => s.mentorId === currentUser.id || s.menteeId === currentUser.id
-  );
+  const userEmail = (currentUser?.email || '').toLowerCase();
+  const userId = currentUser?.id || '';
 
-  const upcomingSessions = userSessions.filter((s) => s.status === 'upcoming');
+  const isMentorMatch = (s: MentorshipSession) =>
+    s.mentorId === userId || (Boolean(s.mentorEmail) && Boolean(userEmail) && s.mentorEmail?.toLowerCase() === userEmail);
+
+  const isMenteeMatch = (s: MentorshipSession) =>
+    s.menteeId === userId || (Boolean(s.menteeEmail) && Boolean(userEmail) && s.menteeEmail?.toLowerCase() === userEmail);
+
+  const userSessions = sessions.filter((s) => isMentorMatch(s) || isMenteeMatch(s));
+
+  const upcomingSessions = userSessions.filter(
+    (s) => s.status === 'upcoming' || s.status === 'accepted' || s.status === 'pending'
+  );
   const completedSessions = userSessions.filter((s) => s.status === 'completed');
-  const cancelledSessions = userSessions.filter((s) => s.status === 'cancelled');
+  const cancelledSessions = userSessions.filter((s) => s.status === 'cancelled' || s.status === 'declined');
 
   const displayedSessions =
     activeTab === 'Upcoming'
@@ -51,9 +64,9 @@ export default function SessionsPage() {
       : cancelledSessions;
 
   const handleJoinCall = (sess: MentorshipSession) => {
-    const isMentor = sess.mentorId === currentUser.id;
+    const isMentor = isMentorMatch(sess);
     const partnerId = isMentor ? sess.menteeId : sess.mentorId;
-    const partner = INITIAL_USERS.find((u) => u.id === partnerId) || {
+    const partner = DEMO_USERS_LIST.find((u) => u.id === partnerId) || {
       id: partnerId,
       name: isMentor ? sess.menteeName : sess.mentorName,
       avatar: isMentor ? sess.menteeAvatar : sess.mentorAvatar,
@@ -72,6 +85,7 @@ export default function SessionsPage() {
       hoursMentored: 1,
     };
 
+    showToast('Joining Meeting...', `Connecting video call with ${partner.name}`, 'info');
     initiateCall(partner, 'video');
   };
 
@@ -96,14 +110,14 @@ export default function SessionsPage() {
       <TopHeader
         title="Sessions & Calendar"
         subtitle="Schedule 1-on-1 peer mentoring, mock interviews, and launch WebRTC video meetings"
-        onOpenQuickAction={() => setBookModalOpen(true)}
+        onOpenQuickAction={() => setQuickActionOpen(true)}
       />
 
-      <div className="p-8 max-w-7xl w-full mx-auto space-y-6">
+      <div className="p-4 sm:p-8 max-w-7xl w-full mx-auto space-y-6">
         
         {/* Header bar with Book button */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+          <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
             {(['Upcoming', 'Past', 'Cancelled'] as const).map((tab) => {
               const count =
                 tab === 'Upcoming'
@@ -116,16 +130,16 @@ export default function SessionsPage() {
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
                     activeTab === tab
                       ? 'bg-indigo-600 text-white shadow-xs'
-                      : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/70'
+                      : 'bg-white dark:bg-[#151F32] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/90 dark:border-[#26334D]'
                   }`}
                 >
                   <span>{tab}</span>
                   <span
-                    className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                      activeTab === tab ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
+                    className={`text-xs px-2 py-0.5 rounded-full font-bold ${
+                      activeTab === tab ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                     }`}
                   >
                     {count}
@@ -137,7 +151,7 @@ export default function SessionsPage() {
 
           <button
             onClick={() => setBookModalOpen(true)}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-600/20 hover:scale-102 active:scale-98 transition-all"
+            className="flex items-center gap-2 px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-indigo-600/25 hover:scale-102 active:scale-98 transition-all cursor-pointer self-start sm:self-auto"
           >
             <Plus className="w-4 h-4" />
             <span>Book New Session</span>
@@ -148,23 +162,23 @@ export default function SessionsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
           {/* Interactive Monthly Calendar (Left 5 Cols) */}
-          <div className="lg:col-span-5 bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs h-fit">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                <CalendarDays className="w-4 h-4 text-indigo-600" />
+          <div className="lg:col-span-5 bg-white dark:bg-[#151F32] border border-slate-200/90 dark:border-[#26334D] rounded-3xl p-6 md:p-8 shadow-sm h-fit">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <CalendarDays className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                 <span>{monthName}</span>
               </h3>
 
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5">
                 <button
                   onClick={handlePrevMonth}
-                  className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
+                  className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
                 <button
                   onClick={handleNextMonth}
-                  className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
+                  className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>
@@ -172,14 +186,14 @@ export default function SessionsPage() {
             </div>
 
             {/* Days of week */}
-            <div className="grid grid-cols-7 gap-1 text-center my-3 text-[11px] font-bold text-slate-400">
+            <div className="grid grid-cols-7 gap-1 text-center my-4 text-xs font-bold text-slate-400">
               {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d) => (
                 <div key={d} className="py-1">{d}</div>
               ))}
             </div>
 
             {/* Calendar grid */}
-            <div className="grid grid-cols-7 gap-1 text-center text-xs">
+            <div className="grid grid-cols-7 gap-1.5 text-center text-xs sm:text-sm">
               {Array.from({ length: firstDayIndex }).map((_, i) => (
                 <div key={`empty_${i}`} className="py-2.5" />
               ))}
@@ -193,31 +207,31 @@ export default function SessionsPage() {
                 return (
                   <button
                     key={dayNum}
-                    className={`py-2 rounded-xl font-semibold transition-all relative flex flex-col items-center justify-center ${
+                    className={`py-2.5 rounded-xl font-bold transition-all relative flex flex-col items-center justify-center cursor-pointer ${
                       isSelected
-                        ? 'bg-indigo-600 text-white font-bold shadow-xs'
+                        ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
                         : hasSession
-                        ? 'bg-indigo-50 text-indigo-900 font-bold border border-indigo-200'
-                        : 'hover:bg-slate-100 text-slate-700'
+                        ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-900 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800'
+                        : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
                     }`}
                   >
                     <span>{dayNum}</span>
                     {hasSession && (
-                      <span className={`w-1.5 h-1.5 rounded-full mt-0.5 ${isSelected ? 'bg-white' : 'bg-indigo-600'}`} />
+                      <span className={`w-1.5 h-1.5 rounded-full mt-0.5 ${isSelected ? 'bg-white' : 'bg-indigo-600 dark:bg-indigo-400'}`} />
                     )}
                   </button>
                 );
               })}
             </div>
 
-            <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+            <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs sm:text-sm text-slate-500 dark:text-slate-400">
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-indigo-600" />
-                <span>Mentorship Session Slot</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-indigo-600 dark:bg-indigo-400" />
+                <span>Active Mentorship Slot</span>
               </div>
               <button
                 onClick={() => setBookModalOpen(true)}
-                className="text-indigo-600 font-bold hover:underline"
+                className="text-indigo-600 dark:text-indigo-400 font-bold hover:underline cursor-pointer"
               >
                 + Schedule
               </button>
@@ -227,41 +241,41 @@ export default function SessionsPage() {
           {/* Sessions Detailed Cards List (Right 7 Cols) */}
           <div className="lg:col-span-7 space-y-4">
             {displayedSessions.length === 0 ? (
-              <div className="bg-white border border-slate-200/80 rounded-3xl p-12 text-center">
-                <CalendarIcon className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-                <h4 className="text-base font-bold text-slate-800">No {activeTab.toLowerCase()} sessions</h4>
-                <p className="text-xs text-slate-500 mt-1">Book your next 1-on-1 session to get tailored feedback.</p>
+              <div className="bg-white dark:bg-[#151F32] border border-slate-200/90 dark:border-[#26334D] rounded-3xl p-12 text-center">
+                <CalendarIcon className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+                <h4 className="text-lg font-bold text-slate-800 dark:text-white">No {activeTab.toLowerCase()} sessions</h4>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Book your next 1-on-1 session to get tailored feedback.</p>
                 <button
                   onClick={() => setBookModalOpen(true)}
-                  className="mt-4 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold"
+                  className="mt-4 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-bold cursor-pointer"
                 >
                   Book Session
                 </button>
               </div>
             ) : (
               displayedSessions.map((sess) => {
-                const isMentor = sess.mentorId === currentUser.id;
+                const isMentor = isMentorMatch(sess);
                 const partnerName = isMentor ? sess.menteeName : sess.mentorName;
                 const partnerAvatar = isMentor ? sess.menteeAvatar : sess.mentorAvatar;
 
                 return (
                   <div
                     key={sess.id}
-                    className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs hover:border-indigo-200 transition-all space-y-4"
+                    className="interactive-card bg-white dark:bg-[#151F32] border border-slate-200/90 dark:border-[#26334D] rounded-3xl p-6 shadow-sm hover:border-indigo-500/70 space-y-4"
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3.5">
                         <img
                           src={partnerAvatar}
                           alt={partnerName}
-                          className="w-12 h-12 rounded-2xl object-cover ring-2 ring-slate-100 shrink-0"
+                          className="w-14 h-14 rounded-2xl object-cover ring-2 ring-slate-100 dark:ring-slate-700 shrink-0"
                         />
                         <div>
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">
+                          <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2.5 py-0.5 rounded-md border border-indigo-100 dark:border-indigo-900">
                             {sess.type}
                           </span>
-                          <h4 className="text-sm font-bold text-slate-900 mt-1">{sess.title}</h4>
-                          <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
+                          <h4 className="text-base font-bold text-slate-900 dark:text-white mt-1.5">{sess.title}</h4>
+                          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
                             <User className="w-3.5 h-3.5 text-slate-400" />
                             <span>With {partnerName}</span>
                           </p>
@@ -269,55 +283,96 @@ export default function SessionsPage() {
                       </div>
 
                       <div className="text-right shrink-0">
-                        <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full uppercase ${
-                          sess.status === 'upcoming'
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        <span className={`text-xs font-bold px-3 py-1 rounded-full uppercase ${
+                          sess.status === 'pending'
+                            ? 'bg-amber-50 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800'
+                            : sess.status === 'accepted' || sess.status === 'upcoming'
+                            ? 'bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
                             : sess.status === 'completed'
-                            ? 'bg-slate-100 text-slate-600'
-                            : 'bg-rose-50 text-rose-600'
+                            ? 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                            : 'bg-rose-50 dark:bg-rose-950/70 text-rose-600 border border-rose-200'
                         }`}>
-                          {sess.status}
+                          {sess.status === 'pending' ? 'Pending Approval' : sess.status}
                         </span>
                       </div>
                     </div>
 
                     {/* Schedule Time & Notes */}
-                    <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-                      <div className="flex items-center gap-2 font-bold text-slate-800">
-                        <Clock className="w-4 h-4 text-indigo-600" />
+                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs sm:text-sm">
+                      <div className="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-200">
+                        <Clock className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                         <span>{sess.date} at {sess.time} ({sess.durationMinutes} minutes)</span>
                       </div>
                       {sess.notes && (
-                        <p className="text-slate-500 italic max-w-xs truncate">
+                        <p className="text-slate-500 dark:text-slate-400 italic max-w-xs truncate">
                           &ldquo;{sess.notes}&rdquo;
                         </p>
                       )}
                     </div>
 
                     {/* Working Actions for Session */}
-                    {sess.status === 'upcoming' && (
-                      <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                    {sess.status === 'pending' && (
+                      <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800 flex-wrap gap-2">
+                        {isMentor ? (
+                          <>
+                            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-semibold">
+                              Mentee {sess.menteeName} requested this session slot.
+                            </p>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => declineSession(sess.id)}
+                                className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/50 hover:text-rose-600 text-slate-700 dark:text-slate-300 font-bold text-xs sm:text-sm transition-colors flex items-center gap-1.5 cursor-pointer"
+                              >
+                                <XCircle className="w-4 h-4" />
+                                <span>Decline</span>
+                              </button>
+                              <button
+                                onClick={() => acceptSession(sess.id)}
+                                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-indigo-600/25 transition-all flex items-center gap-1.5 hover:scale-102 active:scale-98 cursor-pointer"
+                              >
+                                <CheckCircle2 className="w-4 h-4" />
+                                <span>Accept Session</span>
+                              </button>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 italic">
+                              Awaiting {sess.mentorName}&apos;s confirmation. Video call unlocks once accepted.
+                            </p>
+                            <button
+                              onClick={() => cancelSession(sess.id, 'Cancelled by mentee')}
+                              className="px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-rose-50 dark:hover:bg-rose-950/50 hover:text-rose-600 text-slate-600 dark:text-slate-400 font-bold text-xs transition-colors cursor-pointer"
+                            >
+                              Cancel Request
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    )}
+
+                    {(sess.status === 'upcoming' || sess.status === 'accepted') && (
+                      <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800 flex-wrap gap-2">
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => setRescheduleSessionTarget(sess)}
-                            className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors flex items-center gap-1.5"
+                            className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs sm:text-sm transition-colors flex items-center gap-1.5 cursor-pointer"
                           >
-                            <RotateCcw className="w-3.5 h-3.5" />
+                            <RotateCcw className="w-4 h-4" />
                             <span>Reschedule</span>
                           </button>
 
                           <button
                             onClick={() => cancelSession(sess.id, 'Schedule conflict')}
-                            className="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-rose-50 hover:text-rose-600 text-slate-600 font-bold text-xs transition-colors"
+                            className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-rose-50 dark:hover:bg-rose-950/50 hover:text-rose-600 text-slate-600 dark:text-slate-300 font-bold text-xs sm:text-sm transition-colors cursor-pointer"
                           >
                             Cancel
                           </button>
                         </div>
 
-                        {/* Join Call button that triggers WebRTC */}
                         <button
                           onClick={() => handleJoinCall(sess)}
-                          className="flex items-center gap-2 px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/20 hover:scale-102 active:scale-98 transition-all"
+                          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm shadow-md shadow-emerald-600/25 hover:scale-102 active:scale-98 transition-all cursor-pointer"
                         >
                           <Video className="w-4 h-4" />
                           <span>Join Video Call</span>

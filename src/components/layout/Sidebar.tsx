@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useMentorship } from '@/context/MentorshipContext';
+import { useTheme } from '@/context/ThemeContext';
+import { useLayout } from '@/context/LayoutContext';
 import {
   LayoutDashboard,
   Users,
@@ -15,23 +17,35 @@ import {
   BookOpen,
   GraduationCap,
   Sparkles,
-  ChevronRight,
   LogOut,
   Repeat2,
+  X,
+  Sun,
+  Moon,
 } from 'lucide-react';
 
 export default function Sidebar() {
   const pathname = usePathname();
   const { currentUser, allPersonas, switchPersona, logout } = useAuth();
   const { requests, sessions, conversations } = useMentorship();
+  const { theme, toggleTheme } = useTheme();
+  const { isMobileSidebarOpen, closeMobileSidebar } = useLayout();
+
+  const userEmail = (currentUser?.email || '').toLowerCase();
+  const userId = currentUser?.id || '';
 
   // Dynamic counts for notification badges
   const pendingRequestsCount = requests.filter(
-    (r) => r.mentorId === currentUser.id && r.status === 'pending'
+    (r) =>
+      ((r.mentorId === userId) || (Boolean(r.mentorEmail) && Boolean(userEmail) && r.mentorEmail?.toLowerCase() === userEmail)) &&
+      r.status === 'pending'
   ).length;
 
   const upcomingSessionsCount = sessions.filter(
-    (s) => (s.mentorId === currentUser.id || s.menteeId === currentUser.id) && s.status === 'upcoming'
+    (s) =>
+      ((s.mentorId === userId) || (Boolean(s.mentorEmail) && Boolean(userEmail) && s.mentorEmail?.toLowerCase() === userEmail) ||
+       (s.menteeId === userId) || (Boolean(s.menteeEmail) && Boolean(userEmail) && s.menteeEmail?.toLowerCase() === userEmail)) &&
+      (s.status === 'upcoming' || s.status === 'accepted' || s.status === 'pending')
   ).length;
 
   const unreadMessagesCount = conversations.reduce((acc, c) => acc + (c.unreadCount || 0), 0);
@@ -80,39 +94,48 @@ export default function Sidebar() {
     },
   ];
 
-  return (
-    <aside className="w-64 bg-[#0B1528] text-slate-300 flex flex-col shrink-0 h-screen sticky top-0 border-r border-slate-800/80 select-none z-30">
+  const sidebarContent = (
+    <div className="flex flex-col h-full bg-[#0B1528] dark:bg-[#070D1B] text-slate-300 select-none border-r border-slate-800/80">
       
       {/* Brand Header */}
       <div className="p-5 border-b border-slate-800/80 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/25 group-hover:scale-105 transition-transform">
-            <GraduationCap className="w-5 h-5" />
+        <Link href="/" onClick={closeMobileSidebar} className="flex items-center gap-3 group">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/25 group-hover:scale-105 transition-transform">
+            <GraduationCap className="w-6 h-6" />
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <span className="font-bold text-white tracking-tight text-lg">MentorLink</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="font-extrabold text-white tracking-tight text-xl">MentorLink</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             </div>
-            <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">University Edition</p>
+            <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">University Edition</p>
           </div>
         </Link>
+
+        {/* Mobile close button */}
+        <button
+          onClick={closeMobileSidebar}
+          className="lg:hidden p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+          title="Close Navigation"
+        >
+          <X className="w-5 h-5" />
+        </button>
       </div>
 
-      {/* Role Pill Banner */}
+      {/* Active Persona Banner */}
       <div className="px-4 pt-4 pb-2">
-        <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/50">
-          <div className="flex items-center gap-2 min-w-0">
+        <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-800/60 border border-slate-700/60 shadow-xs">
+          <div className="flex items-center gap-2.5 min-w-0">
             <Sparkles className="w-4 h-4 text-indigo-400 shrink-0" />
             <div className="min-w-0">
-              <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-semibold">Active Persona</span>
-              <p className="text-xs font-bold text-white truncate">{currentUser.name}</p>
+              <span className="text-xs text-slate-400 uppercase tracking-wider block font-bold">Active User</span>
+              <p className="text-sm font-bold text-white truncate">{currentUser.name}</p>
             </div>
           </div>
-          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase shrink-0 ${
+          <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full uppercase shrink-0 ${
             currentUser.role === 'mentor'
-              ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-              : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
+              ? 'bg-purple-500/25 text-purple-300 border border-purple-500/40'
+              : 'bg-indigo-500/25 text-indigo-300 border border-indigo-500/40'
           }`}>
             {currentUser.role === 'mentor' ? 'Senior' : 'Junior'}
           </span>
@@ -120,8 +143,10 @@ export default function Sidebar() {
       </div>
 
       {/* Main Navigation Links */}
-      <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto">
-        <div className="px-3 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Navigation</div>
+      <nav className="flex-1 px-3 py-3 space-y-1.5 overflow-y-auto">
+        <div className="px-3 pb-1 text-xs font-extrabold text-slate-400 uppercase tracking-wider">
+          Platform Menu
+        </div>
         {navLinks.map((link) => {
           const isActive = pathname === link.href;
           const Icon = link.icon;
@@ -130,19 +155,20 @@ export default function Sidebar() {
             <Link
               key={link.name}
               href={link.href}
-              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 group ${
+              onClick={closeMobileSidebar}
+              className={`flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-200 group ${
                 isActive
-                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30 font-bold'
-                  : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/70'
+                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 font-bold'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
               }`}
             >
               <div className="flex items-center gap-3">
-                <Icon className={`w-4 h-4 transition-colors ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-indigo-400'}`} />
+                <Icon className={`w-5 h-5 transition-colors ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-indigo-400'}`} />
                 <span>{link.name}</span>
               </div>
 
               {link.badge !== undefined && (
-                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${link.badgeColor}`}>
+                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${link.badgeColor}`}>
                   {link.badge}
                 </span>
               )}
@@ -152,16 +178,16 @@ export default function Sidebar() {
       </nav>
 
       {/* Persona Switcher Quick Dropdown */}
-      <div className="px-4 py-2 border-t border-slate-800/80 bg-slate-900/40">
+      <div className="px-4 py-3 border-t border-slate-800/80 bg-slate-900/50">
         <div className="flex items-center justify-between mb-1.5">
-          <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider flex items-center gap-1">
-            <Repeat2 className="w-3 h-3 text-indigo-400" /> Switch Demo User
+          <span className="text-xs text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
+            <Repeat2 className="w-3.5 h-3.5 text-indigo-400" /> Switch Demo Persona
           </span>
         </div>
         <select
           value={currentUser.id}
           onChange={(e) => switchPersona(e.target.value)}
-          className="w-full text-xs font-medium bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-indigo-500 cursor-pointer"
+          className="w-full text-xs font-semibold bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500 cursor-pointer"
         >
           {allPersonas.map((p) => (
             <option key={p.id} value={p.id}>
@@ -171,34 +197,76 @@ export default function Sidebar() {
         </select>
       </div>
 
-      {/* User Footer Profile Card */}
-      <div className="p-4 border-t border-slate-800/80 bg-slate-950/60">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5 min-w-0">
+      {/* User Footer Card & Theme Toggle */}
+      <div className="p-4 border-t border-slate-800/80 bg-slate-950/70">
+        <div className="flex items-center justify-between gap-2">
+          <Link
+            href="/profile"
+            onClick={closeMobileSidebar}
+            className="flex items-center gap-3 min-w-0 hover:opacity-85 transition-opacity group flex-1 cursor-pointer"
+            title="View & Edit Profile"
+          >
             <div className="relative shrink-0">
               <img
                 src={currentUser.avatar}
                 alt={currentUser.name}
-                className="w-9 h-9 rounded-full object-cover ring-2 ring-slate-700"
+                className="w-10 h-10 rounded-full object-cover ring-2 ring-slate-700 group-hover:ring-indigo-500 transition-all"
               />
-              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-slate-900 rounded-full" />
+              <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-slate-900 rounded-full" />
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-bold text-white truncate">{currentUser.name}</p>
-              <p className="text-[11px] text-slate-400 truncate">{currentUser.email}</p>
+              <p className="text-sm font-bold text-white truncate group-hover:text-indigo-400 transition-colors">{currentUser.name}</p>
+              <p className="text-xs text-slate-400 truncate">{currentUser.email}</p>
             </div>
-          </div>
+          </Link>
 
-          <button
-            onClick={logout}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors"
-            title="Log out"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-1">
+            {/* Theme Toggle Button */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-xl text-slate-400 hover:text-amber-400 hover:bg-slate-800 transition-colors"
+              title={theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+            >
+              {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-400" />}
+            </button>
+
+            {/* Logout Button */}
+            <button
+              onClick={logout}
+              className="p-2 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors"
+              title="Log out"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
 
-    </aside>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Desktop Sticky Sidebar */}
+      <aside className="hidden lg:flex w-72 shrink-0 h-screen sticky top-0 z-30">
+        {sidebarContent}
+      </aside>
+
+      {/* Mobile Slide-Over Drawer */}
+      {isMobileSidebarOpen && (
+        <div className="fixed inset-0 z-50 flex lg:hidden animate-in fade-in duration-200">
+          {/* Backdrop Overlay */}
+          <div
+            onClick={closeMobileSidebar}
+            className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs transition-opacity"
+          />
+
+          {/* Drawer Body */}
+          <div className="relative w-80 max-w-[85vw] h-full shadow-2xl z-10 animate-in slide-in-from-left duration-300">
+            {sidebarContent}
+          </div>
+        </div>
+      )}
+    </>
   );
 }

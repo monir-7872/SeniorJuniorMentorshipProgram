@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { MentorshipSession } from '@/types';
 import { useMentorship } from '@/context/MentorshipContext';
-import { X, Calendar, Clock } from 'lucide-react';
+import { X, Calendar } from 'lucide-react';
 
 interface RescheduleModalProps {
   session: MentorshipSession | null;

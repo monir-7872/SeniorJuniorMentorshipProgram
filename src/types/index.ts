@@ -39,11 +39,13 @@ export type RequestStatus = 'pending' | 'accepted' | 'declined';
 export interface MentorshipRequest {
   id: string;
   menteeId: string;
+  menteeEmail?: string;
   menteeName: string;
   menteeAvatar: string;
   menteeDepartment: Department;
   menteeYear: AcademicYear;
   mentorId: string;
+  mentorEmail?: string;
   mentorName: string;
   mentorAvatar: string;
   status: RequestStatus;
@@ -53,7 +55,7 @@ export interface MentorshipRequest {
   createdAt: string;
 }
 
-export type SessionStatus = 'upcoming' | 'completed' | 'cancelled';
+export type SessionStatus = 'pending' | 'accepted' | 'upcoming' | 'completed' | 'cancelled' | 'declined';
 export type SessionType = 
   | '1-on-1 Mentorship' 
   | 'Resume & Portfolio Review' 
@@ -65,9 +67,11 @@ export interface MentorshipSession {
   id: string;
   title: string;
   mentorId: string;
+  mentorEmail?: string;
   mentorName: string;
   mentorAvatar: string;
   menteeId: string;
+  menteeEmail?: string;
   menteeName: string;
   menteeAvatar: string;
   date: string; // YYYY-MM-DD
@@ -126,6 +130,7 @@ export interface ChatMessage {
 export interface Conversation {
   id: string;
   participants: User[];
+  participantIds?: string[];
   isGroup: boolean;
   groupName?: string;
   lastMessage?: ChatMessage;
@@ -184,4 +189,23 @@ export interface WebRTCSignalingPayload {
   candidate?: RTCIceCandidateInit;
   callType?: CallType;
   caller?: User;
+}
+
+// Notifications
+export type NotificationType = 'session' | 'request' | 'message' | 'call' | 'general';
+
+export interface AppNotification {
+  id: string;
+  recipientId: string;
+  recipientEmail?: string;
+  senderId?: string;
+  senderEmail?: string;
+  senderName: string;
+  senderAvatar: string;
+  title: string;
+  message: string;
+  type: NotificationType;
+  link?: string;
+  read: boolean;
+  createdAt: string;
 }

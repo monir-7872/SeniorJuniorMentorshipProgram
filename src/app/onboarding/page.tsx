@@ -11,7 +11,6 @@ import {
   Users,
   Check,
   ArrowRight,
-  ShieldCheck,
 } from 'lucide-react';
 
 const DEPARTMENTS: Department[] = [
@@ -80,24 +79,24 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white flex flex-col justify-center items-center p-6">
+    <div className="min-h-screen bg-[#EEF2F6] dark:bg-[#0B1120] text-slate-900 dark:text-white flex flex-col justify-center items-center p-6 transition-colors duration-200">
       
       {/* Brand Header */}
-      <div className="flex items-center gap-3 mb-8">
-        <div className="w-10 h-10 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-600/30">
-          <GraduationCap className="w-6 h-6" />
+      <div className="flex items-center gap-3.5 mb-8">
+        <div className="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-600/30">
+          <GraduationCap className="w-7 h-7" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">MentorLink</h1>
-          <p className="text-xs text-slate-400">University Senior-Junior Mentorship Platform</p>
+          <h1 className="text-2xl font-extrabold tracking-tight">MentorLink</h1>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-semibold">University Senior-Junior Mentorship Platform</p>
         </div>
       </div>
 
       {/* Main Stepper Card */}
-      <div className="w-full max-w-xl bg-slate-800/90 border border-slate-700/80 rounded-3xl p-8 shadow-2xl backdrop-blur-md">
+      <div className="w-full max-w-xl bg-white dark:bg-[#151F32] border border-slate-200/90 dark:border-[#26334D] rounded-3xl p-6 sm:p-10 shadow-2xl backdrop-blur-md">
         
         {/* Step Progress Pills */}
-        <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-700/60">
+        <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-200 dark:border-slate-700/60">
           {[
             { num: 1, label: 'Choose Role' },
             { num: 2, label: 'Department & Year' },
@@ -105,17 +104,17 @@ export default function OnboardingPage() {
           ].map((st) => (
             <div key={st.num} className="flex items-center gap-2">
               <span
-                className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                   step === st.num
                     ? 'bg-indigo-600 text-white ring-4 ring-indigo-500/20'
                     : step > st.num
                     ? 'bg-emerald-600 text-white'
-                    : 'bg-slate-700 text-slate-400'
+                    : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
                 }`}
               >
                 {step > st.num ? <Check className="w-4 h-4" /> : st.num}
               </span>
-              <span className={`text-xs font-semibold hidden sm:inline ${step === st.num ? 'text-white' : 'text-slate-400'}`}>
+              <span className={`text-xs font-bold hidden sm:inline ${step === st.num ? 'text-slate-900 dark:text-white' : 'text-slate-400'}`}>
                 {st.label}
               </span>
             </div>
@@ -124,10 +123,10 @@ export default function OnboardingPage() {
 
         {/* Step 1: Role Selection */}
         {step === 1 && (
-          <div className="space-y-5 animate-in fade-in">
+          <div className="space-y-6 animate-in fade-in">
             <div className="text-center">
-              <h2 className="text-xl font-bold">Select Your Mentorship Track</h2>
-              <p className="text-xs text-slate-400 mt-1">How will you participate in MentorLink?</p>
+              <h2 className="text-2xl font-extrabold">Select Your Mentorship Track</h2>
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">How will you participate in MentorLink?</p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
@@ -135,17 +134,17 @@ export default function OnboardingPage() {
               <button
                 type="button"
                 onClick={() => setRole('mentee')}
-                className={`p-6 rounded-2xl border-2 text-left transition-all ${
+                className={`p-6 rounded-2xl border-2 text-left transition-all cursor-pointer ${
                   role === 'mentee'
-                    ? 'border-indigo-500 bg-indigo-500/10 shadow-lg shadow-indigo-500/10'
-                    : 'border-slate-700 bg-slate-800/60 hover:border-slate-600'
+                    ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/40 shadow-lg shadow-indigo-500/15'
+                    : 'border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/40 hover:border-slate-300 dark:hover:border-slate-600'
                 }`}
               >
-                <div className="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center mb-3">
-                  <Users className="w-5 h-5" />
+                <div className="w-12 h-12 rounded-xl bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-3">
+                  <Users className="w-6 h-6" />
                 </div>
-                <h3 className="text-sm font-bold text-white">Junior / Mentee</h3>
-                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">Junior / Mentee</h3>
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
                   I am looking for guidance, resume critiques, mock interviews, and course planning advice from experienced seniors.
                 </p>
               </button>
@@ -154,17 +153,17 @@ export default function OnboardingPage() {
               <button
                 type="button"
                 onClick={() => setRole('mentor')}
-                className={`p-6 rounded-2xl border-2 text-left transition-all ${
+                className={`p-6 rounded-2xl border-2 text-left transition-all cursor-pointer ${
                   role === 'mentor'
-                    ? 'border-purple-500 bg-purple-500/10 shadow-lg shadow-purple-500/10'
-                    : 'border-slate-700 bg-slate-800/60 hover:border-slate-600'
+                    ? 'border-purple-500 bg-purple-50/50 dark:bg-purple-950/40 shadow-lg shadow-purple-500/15'
+                    : 'border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/40 hover:border-slate-300 dark:hover:border-slate-600'
                 }`}
               >
-                <div className="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center mb-3">
-                  <UserCheck className="w-5 h-5" />
+                <div className="w-12 h-12 rounded-xl bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center mb-3">
+                  <UserCheck className="w-6 h-6" />
                 </div>
-                <h3 className="text-sm font-bold text-white">Senior / Mentor</h3>
-                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">Senior / Mentor</h3>
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
                   I am a 3rd/4th year student or alumni eager to mentor juniors, conduct mock interviews, and share study resources.
                 </p>
               </button>
@@ -172,7 +171,7 @@ export default function OnboardingPage() {
 
             <button
               onClick={() => setStep(2)}
-              className="w-full mt-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2"
+              className="w-full mt-6 py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <span>Continue to Academic Setup</span>
               <ArrowRight className="w-4 h-4" />
@@ -182,20 +181,20 @@ export default function OnboardingPage() {
 
         {/* Step 2: Department & Academic Year */}
         {step === 2 && (
-          <div className="space-y-4 animate-in fade-in">
+          <div className="space-y-5 animate-in fade-in">
             <div>
-              <h2 className="text-xl font-bold">Academic Profile</h2>
-              <p className="text-xs text-slate-400 mt-1">Specify your university program</p>
+              <h2 className="text-2xl font-extrabold">Academic Profile</h2>
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Specify your university program</p>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
                 University Department
               </label>
               <select
                 value={department}
                 onChange={(e) => setDepartment(e.target.value as Department)}
-                className="w-full p-3 rounded-xl bg-slate-700/80 border border-slate-600 text-xs font-semibold text-white focus:outline-none focus:border-indigo-500"
+                className="w-full p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 cursor-pointer"
               >
                 {DEPARTMENTS.map((d) => (
                   <option key={d} value={d}>{d}</option>
@@ -204,13 +203,13 @@ export default function OnboardingPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
                 Academic Year / Batch
               </label>
               <select
                 value={year}
                 onChange={(e) => setYear(e.target.value as AcademicYear)}
-                className="w-full p-3 rounded-xl bg-slate-700/80 border border-slate-600 text-xs font-semibold text-white focus:outline-none focus:border-indigo-500"
+                className="w-full p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 cursor-pointer"
               >
                 {YEARS.map((y) => (
                   <option key={y} value={y}>{y}</option>
@@ -219,7 +218,7 @@ export default function OnboardingPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
                 Headline / Current Status
               </label>
               <input
@@ -227,7 +226,7 @@ export default function OnboardingPage() {
                 value={headline}
                 onChange={(e) => setHeadline(e.target.value)}
                 placeholder="e.g. Sophomore CS Student | Seeking Summer SWE Internships"
-                className="w-full p-3 rounded-xl bg-slate-700/80 border border-slate-600 text-xs font-medium text-white focus:outline-none focus:border-indigo-500"
+                className="w-full p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500"
               />
             </div>
 
@@ -235,14 +234,14 @@ export default function OnboardingPage() {
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="w-1/3 py-3 rounded-xl bg-slate-700 text-slate-300 font-bold text-xs hover:bg-slate-600"
+                className="w-1/3 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs sm:text-sm hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
               >
                 Back
               </button>
               <button
                 type="button"
                 onClick={() => setStep(3)}
-                className="w-2/3 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2"
+                className="w-2/3 py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>Continue to Skills</span>
                 <ArrowRight className="w-4 h-4" />
@@ -253,14 +252,14 @@ export default function OnboardingPage() {
 
         {/* Step 3: Skills & Bio */}
         {step === 3 && (
-          <form onSubmit={handleFinish} className="space-y-4 animate-in fade-in">
+          <form onSubmit={handleFinish} className="space-y-5 animate-in fade-in">
             <div>
-              <h2 className="text-xl font-bold">Skills & Bio</h2>
-              <p className="text-xs text-slate-400 mt-1">Highlight your technical skills or learning targets</p>
+              <h2 className="text-2xl font-extrabold">Skills & Bio</h2>
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Highlight your technical skills or learning targets</p>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
                 Select Topics / Skills ({selectedSkills.length} selected)
               </label>
               <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-1">
@@ -271,10 +270,10 @@ export default function OnboardingPage() {
                       type="button"
                       key={sk}
                       onClick={() => toggleSkill(sk)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                      className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
                         isSelected
                           ? 'bg-indigo-600 text-white shadow-xs'
-                          : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                       }`}
                     >
                       {isSelected ? `✓ ${sk}` : sk}
@@ -285,7 +284,7 @@ export default function OnboardingPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
                 Brief Bio / Mentorship Objective
               </label>
               <textarea
@@ -294,7 +293,7 @@ export default function OnboardingPage() {
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 placeholder="Share a short summary of your background and what you hope to accomplish on MentorLink..."
-                className="w-full p-3 rounded-xl bg-slate-700/80 border border-slate-600 text-xs font-medium text-white focus:outline-none focus:border-indigo-500"
+                className="w-full p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 leading-relaxed"
               />
             </div>
 
@@ -302,13 +301,13 @@ export default function OnboardingPage() {
               <button
                 type="button"
                 onClick={() => setStep(2)}
-                className="w-1/3 py-3 rounded-xl bg-slate-700 text-slate-300 font-bold text-xs hover:bg-slate-600"
+                className="w-1/3 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs sm:text-sm hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
               >
                 Back
               </button>
               <button
                 type="submit"
-                className="w-2/3 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2"
+                className="w-2/3 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Sparkles className="w-4 h-4" />
                 <span>Complete Profile & Open App</span>

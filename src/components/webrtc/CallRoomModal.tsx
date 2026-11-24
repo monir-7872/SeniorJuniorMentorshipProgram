@@ -31,6 +31,7 @@ export default function CallRoomModal() {
 
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
+  const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [pipMinimized, setPipMinimized] = useState<boolean>(false);
 
@@ -41,10 +42,15 @@ export default function CallRoomModal() {
     }
   }, [localStream, activeCall?.isVideoOff]);
 
-  // Bind remote stream to remote video element
+  // Bind remote stream to remote video and audio element
   useEffect(() => {
     if (remoteVideoRef.current && remoteStream) {
       remoteVideoRef.current.srcObject = remoteStream;
+      remoteVideoRef.current.play().catch(() => {});
+    }
+    if (remoteAudioRef.current && remoteStream) {
+      remoteAudioRef.current.srcObject = remoteStream;
+      remoteAudioRef.current.play().catch(() => {});
     }
   }, [remoteStream, activeCall?.status]);
 
@@ -116,6 +122,9 @@ export default function CallRoomModal() {
 
         {/* Video Canvas Stage */}
         <div className="relative flex-1 w-full h-full bg-slate-950 flex items-center justify-center overflow-hidden">
+          {/* Dedicated Peer Audio Player */}
+          <audio ref={remoteAudioRef} autoPlay playsInline className="hidden" />
+
           {/* Main Remote Video or Audio Avatar Display */}
           {activeCall.type === 'video' && remoteStream ? (
             <video
